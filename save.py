@@ -115,15 +115,18 @@ def fetch_comment_thread(submission_id, dest_dir, comment_id=None, context=1):
     if created_utc:
         created_utc = datetime.fromtimestamp(created_utc, tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
 
-    attached_media = None
+    # Process attached media
     output_dir = ""
-    if urlparse(submission_data.get("url")).path != submission_data.get("permalink"):
+    attached_media = submission_data.get("url") or submission_data.get('url_overridden_by_dest')
+    if urlparse(attached_media).path != submission_data.get("permalink"):
         output_dir = Path.joinpath(dest_dir, f"{submission_data["permalink"].split('/')[-2][:150]}-{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         media_files = DownloadMedia(submission=submission_data, destination=output_dir).get_downloaded_media()
         if media_files.get("images") or media_files.get("videos"):
             attached_media = media_files
         else:
             output_dir = ""
+    else:
+        attached_media = None
 
     data = {
         "submission": {
