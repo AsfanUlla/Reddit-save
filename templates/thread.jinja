@@ -10,6 +10,11 @@
                 color: #1c1c1c;
                 padding: 20px;
             }
+            a {
+                color: #336699;
+                text-decoration: none;
+            }
+
             .container {
                 max-width: 900px;
                 margin: auto;
@@ -41,6 +46,9 @@
                 padding: 6px;
             }
 
+            .media-box {
+                margin-top: 10px;
+            }
             .media-grid {
               display: grid;
               grid-template-columns: repeat(auto-fill, minmax(150px, auto));
@@ -68,10 +76,6 @@
                 padding: 4px 6px;
                 border-radius: 4px;
                 font-family: monospace;
-            }
-            a {
-                color: #336699;
-                text-decoration: none;
             }
             .comment-body {
                 font-size: 15px;
@@ -120,14 +124,17 @@
                 </div>
                 <div class="body">{{ submission.selftext | safe }}</div>
                 {% if submission.attached_media %}
-                <div class="media-grid">
+                <div class="media-box">
                     {% if submission.attached_media.images %}
+                    <div class="media-grid">
                         {% for image in submission.attached_media.images %}
                             <a href="{{ image }}" target="_blank">
                                 <img class="media" src="{{ image }}" alt="{{ image }}" />
                             </a>
                         {% endfor %}
+                    </div>
                     {% elif submission.attached_media.videos %}
+                    <div class="media-grid">
                         {% for video in submission.attached_media.videos %}
                         <div>
                             <video
@@ -141,6 +148,9 @@
                             <a href="{{ video }}" target="_blank">[downloaded_video_link]</a>
                         </div>
                         {% endfor %}
+                    </div>
+                    {% else %}
+                    <a href="{{ submission.attached_media }}" target="_blank">{{ submission.attached_media }}</a>
                     {% endif %}
                 </div>
                 {% endif %}
