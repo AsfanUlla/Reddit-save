@@ -137,16 +137,16 @@ def fetch_comment_thread(submission_id, comment_id=None, context=1):
     return data, sanitized_name
 
 
-def render_html(data, output_dir: Path, filename):
+def render_html(data, dest_dir: Path, filename):
     env = Environment(loader=FileSystemLoader("templates"))
     template = env.get_template("thread.html")
 
     rendered_comments = [render_comment(c) for c in data["comments"]]
     output = template.render(submission=data["submission"], comments=rendered_comments)
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    dest_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{filename}-{datetime.now().strftime('%Y%m%d-%H%M%S')}.html"
-    save_path = Path.joinpath(output_dir, filename)
+    save_path = Path.joinpath(dest_dir, filename)
     save_path.write_text(output, encoding="utf-8")
     print(f"✅ Saved to {save_path}")
 
@@ -154,15 +154,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Download Reddit post and comments with context.")
     parser.add_argument("-u", "--url", required=True, help="Reddit post or comment URL")
-    parser.add_argument("-o", "--output", type=Path, default=Path.cwd(), help="Output directory (default: current working directory)")
+    parser.add_argument("-d", "--destination", type=Path, default=Path.cwd(), help="Output directory (default: current working directory)")
     args = parser.parse_args()
 
     url = args.url
     if not is_valid_reddit_url(url):
         raise ValueError(f"❌ Invalid Reddit URL: {url}")
 
-    output_dir = args.output.resolve()
+    dest_dir = args.destination.resolve()
 
     sub_id, com_id, context = parse_reddit_url(url)
     data, filename = fetch_comment_thread(sub_id, com_id, context)
-    render_html(data, output_dir, filename)
+    render_html(data, dest_dir, filename)
