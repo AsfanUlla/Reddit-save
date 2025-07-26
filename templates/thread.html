@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>{{ submission.title }}</title>
+        <style>
+            body {
+                font-family: system-ui, sans-serif;
+                background: #eee;
+                color: #1c1c1c;
+                padding: 20px;
+            }
+            .container {
+                max-width: 900px;
+                margin: auto;
+            }
+            .post {
+                background: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                border: 1px solid #ccc;
+                margin-bottom: 30px;
+            }
+            .title {
+                color: #000;
+                font-size: 26px;
+                font-weight: bold;
+            }
+            .author {
+                font-size: 14px;
+                margin-top: 10px;
+                background: #f0f2f5;
+                padding: 4px 6px;
+                border-radius: 4px;
+                font-family: monospace;
+            }
+            .body {
+                margin-top: 10px;
+                font-size: 16px;
+                padding: 6px;
+                /* white-space: pre-wrap; */
+            }
+            .ext_anchor {
+                padding: 6px;
+                margin-top: 10px;
+            }
+
+            .comment-box {
+                border-left: 4px solid #ccc;
+                padding-left: 12px;
+                margin-left: 10px;
+                margin-top: 10px;
+                background: #fff;
+                border-radius: 6px;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            }
+            .comment-header {
+                font-size: 13px;
+                background: #f0f2f5;
+                padding: 4px 6px;
+                border-radius: 4px;
+                font-family: monospace;
+            }
+            a {
+                color: #336699;
+                text-decoration: none;
+            }
+            .comment-body {
+                font-size: 15px;
+                padding: 6px;
+                white-space: pre-wrap;
+            }
+
+            .depth-0 {
+                border-left-color: #0079d3;
+            }
+            .depth-1 {
+                border-left-color: #ff4500;
+            }
+            .depth-2 {
+                border-left-color: #46d160;
+            }
+            .depth-3 {
+                border-left-color: #ffb000;
+            }
+            .depth-4 {
+                border-left-color: #6a5acd;
+            }
+            .depth-5 {
+                border-left-color: #00cccc;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="post">
+                <div class="title">
+                    <a
+                        class="title"
+                        href="{{ submission.permalink }}"
+                        target="_blank"
+                        >{{ submission.title }}</a
+                    >
+                </div>
+                <div class="author">
+                    <a
+                        class="author"
+                        href="{{ submission.author_link }}"
+                        target="_blank"
+                        >Posted by u/{{ submission.author }}</a
+                    >, on {{ submission.created_at }} ({{ submission.score }})
+                </div>
+                <div class="body">{{ submission.selftext | safe }}</div>
+                {% if submission.attached_media %}
+                <div class="ext_anchor">
+                    <a
+                        class="ext_anchor"
+                        href="{{ submission.attached_media }}"
+                        target="_blank"
+                        >{{ submission.attached_media }}</a
+                    >
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="comments">
+                {% for comment in comments %} {{ comment | safe }} {% endfor %}
+            </div>
+        </div>
+    </body>
+</html>
