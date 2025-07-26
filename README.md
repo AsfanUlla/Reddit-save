@@ -22,7 +22,7 @@ pip install -r requirements.txt
 python save.py -u <reddit_post_url>
 ```
 ```bash
-python save.py -u <reddit_post_url> -o <destination_folder_path>
+python save.py -u <reddit_post_url> -d <destination_folder_path>
 ```
 Help:
 ```bash
