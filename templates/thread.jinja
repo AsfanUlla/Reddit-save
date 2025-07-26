@@ -13,6 +13,7 @@
             .container {
                 max-width: 900px;
                 margin: auto;
+                overflow: hidden;
             }
             .post {
                 background: #fff;
@@ -38,11 +39,18 @@
                 margin-top: 10px;
                 font-size: 16px;
                 padding: 6px;
-                /* white-space: pre-wrap; */
             }
-            .ext_anchor {
-                padding: 6px;
-                margin-top: 10px;
+
+            .media-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(150px, auto));
+              gap: 10px;
+            }
+            .media {
+              width: 100%;
+              height: auto;
+              display: block;
+              object-fit: contain;
             }
 
             .comment-box {
@@ -112,13 +120,28 @@
                 </div>
                 <div class="body">{{ submission.selftext | safe }}</div>
                 {% if submission.attached_media %}
-                <div class="ext_anchor">
-                    <a
-                        class="ext_anchor"
-                        href="{{ submission.attached_media }}"
-                        target="_blank"
-                        >{{ submission.attached_media }}</a
-                    >
+                <div class="media-grid">
+                    {% if submission.attached_media.images %}
+                        {% for image in submission.attached_media.images %}
+                            <a href="{{ image }}" target="_blank">
+                                <img class="media" src="{{ image }}" alt="{{ image }}" />
+                            </a>
+                        {% endfor %}
+                    {% elif submission.attached_media.videos %}
+                        {% for video in submission.attached_media.videos %}
+                        <div>
+                            <video
+                                class="media"
+                                src="{{ video }}"
+                                controls
+                                muted
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                            <a href="{{ video }}" target="_blank">[downloaded_video_link]</a>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
