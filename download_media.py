@@ -10,9 +10,6 @@ class DownloadMedia:
         self.submission = submission
         self.destination = destination.joinpath("media")
 
-        self.ROOT_IMAGE_URL = "https://i.redd.it"
-        self.ROOT_VIDEO_URL = "https://v.redd.it"
-
         self.downloaded_files = dict(
             images=[],
             videos=[]
@@ -92,6 +89,9 @@ class DownloadMedia:
             videos=[]
         )
 
+        ROOT_IMAGE_URL = "https://i.redd.it"
+        ROOT_VIDEO_URL = "https://v.redd.it"
+
         media_url = self.submission.get('url_overridden_by_dest') or self.submission.get('url')
         if media_url and any(media_url.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif']):
             media_urls["images"].append(media_url)
@@ -105,10 +105,10 @@ class DownloadMedia:
                 parsed_preview_url = urlparse(preview_url)
                 media_type = self.submission.get("media_metadata")[item["media_id"]]["e"]
                 if media_type == "Image":
-                    url = f"{self.ROOT_IMAGE_URL}{parsed_preview_url.path}"
+                    url = f"{ROOT_IMAGE_URL}{parsed_preview_url.path}"
                     media_urls["images"].append(url)
                 elif media_type == "Video":
-                    url = f"{self.ROOT_VIDEO_URL}{parsed_preview_url.path}"
+                    url = f"{ROOT_VIDEO_URL}{parsed_preview_url.path}"
                     media_urls["videos"].append(url)
                 else:
                     url = f"{parsed_preview_url.scheme}://{parsed_preview_url.netloc}{parsed_preview_url.path}"
