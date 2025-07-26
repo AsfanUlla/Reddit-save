@@ -9,6 +9,8 @@ import argparse
 import markdown
 import tldextract
 
+from download_media import DownloadMedia
+
 ROOT_DOMAIN = "https://www.reddit.com"
 
 def is_valid_reddit_url(url: str) -> bool:
@@ -86,13 +88,13 @@ def flatten_replies(comment_data):
     return replies
 
 
-def fetch_comment_thread(submission_id, comment_id=None, context=1):
+def fetch_comment_thread(submission_id, dest_dir, comment_id=None, context=1):
     if comment_id:
         url = f"{ROOT_DOMAIN}/comments/{submission_id}/_/{comment_id}.json?context={context}"
     else:
         url = f"{ROOT_DOMAIN}/comments/{submission_id}.json"
 
-    headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:141.0) Gecko/20100101 Firefox/141.0"}
+    headers = {"User-Agent": "Mozilla/5.0"}
     res = requests.get(url, headers=headers)
     res.raise_for_status()
 
@@ -114,8 +116,14 @@ def fetch_comment_thread(submission_id, comment_id=None, context=1):
         created_utc = datetime.fromtimestamp(created_utc, tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
 
     attached_media = None
+    output_dir = ""
     if urlparse(submission_data.get("url")).path != submission_data.get("permalink"):
-        attached_media = submission_data.get("url")
+        output_dir = Path.joinpath(dest_dir, f"{submission_data["permalink"].split('/')[-2][:150]}-{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        media_files = DownloadMedia(submission=submission_data, destination=output_dir).get_downloaded_media()
+        if media_files.get("images") or media_files.get("videos"):
+            attached_media = media_files
+        else:
+            output_dir = ""
 
     data = {
         "submission": {
@@ -134,20 +142,23 @@ def fetch_comment_thread(submission_id, comment_id=None, context=1):
     # get file name from permalink and keep the max lenght to 150
     sanitized_name = permalink.split('/')[-2][:150]
 
-    return data, sanitized_name
+    return data, sanitized_name, output_dir
 
 
-def render_html(data, dest_dir: Path, filename):
+def render_html(data, dest_dir: Path, filename, output_dir):
     env = Environment(loader=FileSystemLoader("templates"))
-    template = env.get_template("thread.html")
+    template = env.get_template("thread.jinja")
 
     rendered_comments = [render_comment(c) for c in data["comments"]]
     output = template.render(submission=data["submission"], comments=rendered_comments)
 
+    dest_dir = dest_dir.joinpath(output_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
+
     filename = f"{filename}-{datetime.now().strftime('%Y%m%d-%H%M%S')}.html"
     save_path = Path.joinpath(dest_dir, filename)
     save_path.write_text(output, encoding="utf-8")
+
     print(f"✅ Saved to {save_path}")
 
 if __name__ == "__main__":
@@ -164,5 +175,5 @@ if __name__ == "__main__":
     dest_dir = args.destination.resolve()
 
     sub_id, com_id, context = parse_reddit_url(url)
-    data, filename = fetch_comment_thread(sub_id, com_id, context)
-    render_html(data, dest_dir, filename)
+    data, filename, output_dir = fetch_comment_thread(sub_id, dest_dir, com_id, context)
+    render_html(data, dest_dir, filename, output_dir)
