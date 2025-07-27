@@ -87,8 +87,30 @@ def flatten_replies(comment_data):
                 replies.append(cdata)
     return replies
 
+def fetch_media(submission_data, dest_dir: Path):
+    output_dir = ""
+    attached_media = submission_data.get("url") or submission_data.get('url_overridden_by_dest')
 
-def fetch_comment_thread(submission_id, dest_dir, comment_id=None, context=1):
+    if urlparse(attached_media).path != submission_data.get("permalink"):
+        output_dir = dest_dir.joinpath(
+            f"{submission_data["permalink"].split('/')[-2][:150]}-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+
+        media_files = DownloadMedia(
+            submission=submission_data,
+            destination=output_dir
+        ).get_downloaded_media()
+
+        if media_files.get("images") or media_files.get("videos"):
+            attached_media = media_files
+        else:
+            output_dir = ""
+    else:
+        attached_media = None
+
+    return attached_media, output_dir
+
+def fetch_comment_thread(submission_id, comment_id=None, context=1):
     if comment_id:
         url = f"{ROOT_DOMAIN}/comments/{submission_id}/_/{comment_id}.json?context={context}"
     else:
@@ -109,43 +131,25 @@ def fetch_comment_thread(submission_id, dest_dir, comment_id=None, context=1):
             c["replies"] = flatten_replies(c)
             comments.append(c)
 
-    permalink = submission_data.get("permalink")
     submission_body_html = markdown.markdown(submission_data.get("selftext", ""), extensions=["extra", "nl2br"])
     created_utc = submission_data.get("created_utc")
     if created_utc:
         created_utc = datetime.fromtimestamp(created_utc, tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
 
-    # Process attached media
-    output_dir = ""
-    attached_media = submission_data.get("url") or submission_data.get('url_overridden_by_dest')
-    if urlparse(attached_media).path != submission_data.get("permalink"):
-        output_dir = Path.joinpath(dest_dir, f"{submission_data["permalink"].split('/')[-2][:150]}-{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-        media_files = DownloadMedia(submission=submission_data, destination=output_dir).get_downloaded_media()
-        if media_files.get("images") or media_files.get("videos"):
-            attached_media = media_files
-        else:
-            output_dir = ""
-    else:
-        attached_media = None
-
-    data = {
+    html_data = {
         "submission": {
             "title": "{} - {}".format(submission_data.get("subreddit_name_prefixed"), submission_data.get("title")),
-            "permalink": ROOT_DOMAIN + permalink,
+            "permalink": ROOT_DOMAIN + submission_data.get("permalink", "[deleted]"),
             "author": submission_data.get("author", "[deleted]"),
             "author_link": ROOT_DOMAIN + "/u/" + submission_data.get("author", "[deleted]"),
             "score": submission_data.get("score"),
             "created_at": created_utc,
             "selftext": submission_body_html,
-            "attached_media": attached_media
         },
         "comments": comments
     }
 
-    # get file name from permalink and keep the max lenght to 150
-    sanitized_name = permalink.split('/')[-2][:150]
-
-    return data, sanitized_name, output_dir
+    return submission_data, html_data
 
 
 def render_html(data, dest_dir: Path, filename, output_dir):
@@ -164,8 +168,7 @@ def render_html(data, dest_dir: Path, filename, output_dir):
 
     print(f"✅ Saved to {save_path}")
 
-if __name__ == "__main__":
-
+def main():
     parser = argparse.ArgumentParser(description="Download Reddit post and comments with context.")
     parser.add_argument("-u", "--url", required=True, help="Reddit post or comment URL")
     parser.add_argument("-d", "--destination", type=Path, default=Path.cwd(), help="Output directory (default: current working directory)")
@@ -178,5 +181,18 @@ if __name__ == "__main__":
     dest_dir = args.destination.resolve()
 
     sub_id, com_id, context = parse_reddit_url(url)
-    data, filename, output_dir = fetch_comment_thread(sub_id, dest_dir, com_id, context)
-    render_html(data, dest_dir, filename, output_dir)
+    submission_data, html_data = fetch_comment_thread(sub_id, com_id, context)
+    attached_media, output_dir = fetch_media(submission_data, dest_dir)
+
+    # update html_data with attached media
+    if attached_media:
+        html_data["submission"]["attached_media"] = attached_media
+
+    # get file name from permalink and keep the max lenght to 150
+    filename = submission_data.get("permalink",
+        submission_data.get("title", "reddit_post")
+    ).split('/')[-2][:150]
+    render_html(html_data, dest_dir, filename, output_dir)
+
+if __name__ == "__main__":
+    main()
