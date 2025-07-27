@@ -1,5 +1,5 @@
 # Reddit-save
-> Python script to save reddit post's and comments
+> Python script to download reddit post's and comments with media
 
 ## Pre-requisites
 - Install python3, python3-venv
