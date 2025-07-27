@@ -77,7 +77,7 @@ class DownloadMedia:
 
         try:
             with YoutubeDL(ydl_opts) as ydl:
-                print("▶️ Downloading post media...")
+                print("▶️ Downloading Media: Video...")
                 ydl.download(urls)
         except Exception as e:
             print(f"⚠️ Error downloading: {e}")
