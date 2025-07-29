@@ -19,10 +19,19 @@ def is_valid_reddit_url(url: str) -> bool:
         domain_parts = tldextract.extract(parsed_url.netloc)
         domain = f"{domain_parts.domain}.{domain_parts.suffix}"
 
-        # Check if it's a Reddit domain and path includes 'comments'
-        if domain == "reddit.com" and "comments" in parsed_url.path:
-            return True
-        return False
+        if domain != "reddit.com":
+            return False
+
+        path_parts = parsed_url.path.strip("/").split("/")
+
+        # Comment URL format: /r/{subreddit}/comments/{post_id}/...
+        is_comment_url = (
+            len(path_parts) >= 4 and
+            path_parts[0] == "r" and
+            path_parts[2] == "comments"
+        )
+
+        return is_comment_url
     except Exception:
         return False
 
@@ -176,6 +185,7 @@ def main():
 
     url = args.url
     if not is_valid_reddit_url(url):
+        print("Accepted url format: /r/{subreddit}/comments/{post_id}/...")
         raise ValueError(f"❌ Invalid Reddit URL: {url}")
 
     dest_dir = args.destination.resolve()
