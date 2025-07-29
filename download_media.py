@@ -101,17 +101,37 @@ class DownloadMedia:
 
         if self.submission.get("domain") == "reddit.com" and self.submission.get("gallery_data"):
             for item in self.submission.get("gallery_data")["items"]:
-                preview_url = self.submission.get("media_metadata")[item["media_id"]]["s"]["u"]
-                parsed_preview_url = urlparse(preview_url)
-                media_type = self.submission.get("media_metadata")[item["media_id"]]["e"]
-                if media_type == "Image":
-                    url = f"{ROOT_IMAGE_URL}{parsed_preview_url.path}"
-                    media_urls["images"].append(url)
-                elif media_type == "Video":
-                    url = f"{ROOT_VIDEO_URL}{parsed_preview_url.path}"
-                    media_urls["videos"].append(url)
-                else:
-                    url = f"{parsed_preview_url.scheme}://{parsed_preview_url.netloc}{parsed_preview_url.path}"
-                    media_urls["images"].append(url)
+
+                try:
+                    # Media Metadata
+                    media_meta = self.submission["media_metadata"][item["media_id"]]
+
+                    # get media preview url u=Image, gif=GIF
+                    preview_url = media_meta["s"].get("u", media_meta["s"].get("gif"))
+
+                    if not preview_url:
+                        continue
+
+                    parsed_preview_url = urlparse(preview_url)
+                    media_type = media_meta.get("e")
+
+                    if media_type in ["Image", "AnimatedImage"]:
+                        url = f"{ROOT_IMAGE_URL}{parsed_preview_url.path}"
+                        media_urls["images"].append(url)
+
+                    elif media_type == "Video":
+                        url = f"{ROOT_VIDEO_URL}{parsed_preview_url.path}"
+                        media_urls["videos"].append(url)
+
+                    else:
+                        url = f"{parsed_preview_url.scheme}://{parsed_preview_url.netloc}{parsed_preview_url.path}"
+                        media_urls["images"].append(url)
+
+                except KeyError as e:
+                    print("KeyError: {}".format(e))
+                    continue
+                except Exception as e:
+                    print(e)
+                    continue
 
         return media_urls
