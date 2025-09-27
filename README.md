@@ -3,7 +3,7 @@
 
 ## Pre-requisites
 - yt-dlp
-  - [Installation guide for Ubuntu & others](https://github.com/yt-dlp/yt-dlp/wiki/Installation#apt)
+  - [Installation guide](https://github.com/yt-dlp/yt-dlp/wiki/Installation)
 - Install python3, python3-venv
   - ```bash
     sudo apt install python3 python3-venv
