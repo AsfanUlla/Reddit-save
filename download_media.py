@@ -4,6 +4,7 @@ import requests
 from pathlib import Path
 from datetime import datetime
 from yt_dlp import YoutubeDL
+from fake_useragent import UserAgent
 
 class DownloadMedia:
     def __init__(self, submission, destination: Path) -> None:
@@ -33,8 +34,9 @@ class DownloadMedia:
                 filename = Path(parsed_url.path).name
                 file_path = Path.joinpath(self.destination ,filename)
 
-                headers = {"User-Agent": "Mozilla/5.0"}
+                headers = {"User-Agent": UserAgent().random}
                 response = requests.get(url, stream=True, headers=headers)
+
                 if response.status_code == 200:
                     self.destination.mkdir(parents=True, exist_ok=True)
                     with open(file_path, 'wb') as out_file:

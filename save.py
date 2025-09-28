@@ -8,6 +8,7 @@ from urllib.parse import urlparse, parse_qs
 import argparse
 import markdown
 import tldextract
+from fake_useragent import UserAgent
 
 from download_media import DownloadMedia
 
@@ -125,7 +126,7 @@ def fetch_comment_thread(submission_id, comment_id=None, context=1):
     else:
         url = f"{ROOT_DOMAIN}/comments/{submission_id}.json"
 
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.3"}
+    headers = {"User-Agent": UserAgent().random}
     res = requests.get(url, headers=headers)
     res.raise_for_status()
 
